@@ -1,0 +1,29 @@
+# 원격 아카이빙 저장소 사용시
+# wget https://github.com/prometheus/node_exporter/releases/download/v1.2.2/node_exporter-1.2.2.linux-amd64.tar.gz
+
+script_dir=$(dirname "$0")
+sudo tar -C /opt -xvzf $script_dir/node_exporter-1.2.2.linux-amd64.tar.gz
+sudo ln -s /opt/node_exporter-1.2.2.linux-amd64/ /opt/node_exporter
+
+sudo bash -c 'cat << EOF > /etc/systemd/system/node_exporter.service
+[Unit]
+Description=Prometheus Node Exporter
+Documentation=https://github.com/prometheus/node_exporter
+After=network-online.target
+
+[Service]
+User=root
+EnvironmentFile=/etc/default/node_exporter
+ExecStart=/opt/node_exporter/node_exporter $OPTIONS
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF'
+
+sudo systemctl daemon-reload
+sudo bash -c 'echo "OPTIONS=''" > /etc/default/node_exporter'
+
+sudo systemctl enable node_exporter
+sudo systemctl restart node_exporter
